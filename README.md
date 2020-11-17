@@ -12,6 +12,6 @@ Quick script that displays the [Resting Value](https://cookieclicker.fandom.com/
 
 1. If you don't have a user script manager, install one first. For Mozilla Firefox, get [Greasemonkey](https://addons.mozilla.org/firefox/addon/greasemonkey/). For Google Chrome, [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) is the one you need. For other browsers, check [this page](http://wiki.greasespot.net/Cross-browser_userscripting).
 
-2. In this page, click on the filename of the script you want to install (they end in `.user.js`). A new page will load showing its code. Click on the **Raw** button.
+2. In this page, click on [cookieStonks.js](https://github.com/suicidejerk/Cookie-Stonks/blob/main/cookieStonks.js). A new page will load showing its code. Click on the **Raw** button.
 
 3. Your user script manager will prompt you to confirm the installation.
