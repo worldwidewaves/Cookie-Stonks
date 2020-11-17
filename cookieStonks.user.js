@@ -7,7 +7,7 @@
 // @match        https://orteil.dashnet.org/cookieclicker/
 // @homepageURL  https://github.com/suicidejerk/Cookie-Stonks
 // @supportURL   https://github.com/suicidejerk/Cookie-Stonks/issues
-// @updateURL    https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/cookieStonks.js
+// @updateURL    https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/cookieStonks.user.js
 // @icon         https://github.com/suicidejerk/Cookie-Stonks/blob/main/cookieDollar.png
 // @license      MIT
 // @grant        none
