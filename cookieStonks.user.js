@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.01
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -58,7 +58,7 @@ function addRestingElement(ele, id, bankLevel) {
     let restingElement = document.createElement("span");
     restingElement.innerText = "/$" + getRestingValue(id, bankLevel) + " ";
     restingElement.className = "bankSymbol";
-    restingElement.style = "font-weight:bold;color:#BBB;background:linear-gradient(to left,transparent,#333,#333,transparent);";
+    restingElement.style = "font-weight:bold;color:#BBB;background:linear-gradient(to left,transparent,#333,#333,transparent);padding:0px;";
     ele.append(document.createElement('br'), ele.childNodes[0]);
     ele.append(restingElement, ele.childNodes[0]);
 
