@@ -7,8 +7,8 @@
 // @match        https://orteil.dashnet.org/cookieclicker/
 // @homepageURL  https://github.com/suicidejerk/Cookie-Stonks
 // @supportURL   https://github.com/suicidejerk/Cookie-Stonks/issues
-// @updateURL    https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/Letterboxd_Rating_Base_10.user.js
-// @icon         https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/img/letterboxd_icon.png
+// @updateURL    https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/cookieStonks.js
+// @icon         https://github.com/suicidejerk/Cookie-Stonks/blob/main/cookieDollar.png
 // @license      MIT
 // @grant        none
 // ==/UserScript==
