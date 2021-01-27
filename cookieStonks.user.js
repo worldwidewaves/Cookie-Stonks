@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.3
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -18,6 +18,24 @@ let styleSheet = `
     background-color: grey;
     padding: 5px;
     font-size: 12px;
+}
+.shimmer {
+    position: "relative";
+    width: "128px";
+    height: "128px";
+    top: "0";
+    left: "0";
+}
+.canvases {
+     width: 180px;
+     height: 83px;
+     position: absolute;
+     padding-left: -10;
+     padding-right: -10;
+     margin-left: -1px;
+     margin-top: -82px;
+     display: block;
+     pointer-events: none;
 }
 `;
 
@@ -36,7 +54,7 @@ function getRestingDifference(id, value, bankLevel) {
     return difference;
 }
 
-function getColorMode(value, owned, ownedMax, mode, gradient) {
+function getColorMode(value, owned, ownedMax, mode) {
     if (value > 100) { value = 100; }
 
     switch (gradient) {
@@ -68,13 +86,35 @@ function getColorMode(value, owned, ownedMax, mode, gradient) {
 }
 
 function addRestingElement(ele, owned, ownedMax, id, bankLevel) {
+    // Remove previous restingElement and resting elementDiff
+    let prevRestingElement = document.getElementById("restingElement-" + id);
+    if (prevRestingElement) {
+        prevRestingElement.remove();
+    }
+    let prevRestingBr = document.getElementById("restingBr-" + id);
+    if (prevRestingBr) {
+        prevRestingBr.remove();
+    }
+    let prevRestingElementDiff = document.getElementById("restingElementDiff-" + id);
+    if (prevRestingElementDiff) {
+        prevRestingElementDiff.remove();
+    }
+    let prevRestingDiffBr = document.getElementById("restingDiffBr-" + id);
+    if (prevRestingDiffBr) {
+        prevRestingDiffBr.remove();
+    }
+
+    // Create new elements
     let restingElement = document.createElement("span");
     restingElement.innerText = "/$" + getRestingValue(id, bankLevel) + " ";
     restingElement.className = "bankSymbol";
     restingElement.id = "restingElement-" + id;
     restingElement.style = "font-weight:bold;color:#BBB;background:linear-gradient(to left,transparent,#333,#333,transparent);padding:0px;";
 
-    ele.append(document.createElement('br'), ele.childNodes[0]);
+    let restingBr = document.createElement("br");
+    restingBr.id = "restingBr-" + id;
+
+    ele.append(restingBr, ele.childNodes[0]);
     ele.append(restingElement, ele.childNodes[0]);
 
     let restingElementDiff = document.createElement("span");
@@ -85,25 +125,64 @@ function addRestingElement(ele, owned, ownedMax, id, bankLevel) {
 
     let bgR, bgG, bgB;
     if (difference >= 150) {
-        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive2", gradient);
+        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive2");
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else if (difference >= 100) {
-        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive1", gradient);
+        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive1");
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else if (difference >= 95) {
-        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative2", gradient);
+        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative2");
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else {
-        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative1", gradient);
+        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative1");
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     }
 
-    restingElement.append(document.createElement('br'), restingElement.childNodes[0]);
+    let restingDiffBr = document.createElement("br");
+    restingDiffBr.id = "restingDiffBr-" + id;
+    restingElement.append(restingDiffBr, restingElement.childNodes[0]);
     restingElement.append(restingElementDiff, restingElement.childNodes[0]);
+
+    // Shimmer
+    if (shimmerState == "on") {
+        let key1 = 1;
+        let key2 = 1;
+        if (shimmerMode == "deal") {
+            parseInt(owned) > 0 ? key1 = 1 : key1 = 0;
+            parseInt(owned) < parseInt(ownedMax) ? key2 = 1 : key2 = 0;
+        }
+        let topDiff =  parseInt(goldenShimmer);
+        let bottomDiff =  parseInt(wrathShimmer);
+
+        // Remove previous shimmer
+        let prevCanvas = document.getElementById("shimmerCanvas" + id);
+        if (prevCanvas) {
+            prevCanvas.remove();
+        }
+
+        let canvas = document.createElement("canvas");
+        canvas.style.zIndex = 100;
+        canvas.className = "canvases";
+        if (insugarTradingFound) {
+            canvas.style.height = "98px";
+            canvas.style.marginTop = "-97px";
+        }
+        canvas.id = "shimmerCanvas" + id;
+        let ctx = canvas.getContext("2d");
+        let imageAppend = document.getElementById("bankGood-" + id);
+        let shimmer = document.createElement("img");
+
+        imageAppend.append(canvas);
+        if (difference >= topDiff && key1) {
+            ctx.drawImage(shimmerGolden, 0, 0, 264, 150);
+        } else if (difference <= bottomDiff && key2) {
+            ctx.drawImage(shimmerWrath, 0, 0, 264, 150);
+        }
+    }
 }
 
 // Callback function to execute when mutations are observed
-var callback = function(mutationsList) {
+var callback = async function(mutationsList) {
     let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
     for (let i = 0; i <= 15; i++) {
         observer[i].disconnect(); // So the change we make isn't detected as a mutation and we enter an infinite loop
@@ -117,34 +196,319 @@ var callback = function(mutationsList) {
     }
 };
 
+function createOptionsElements() {
+    // Div
+    let divOptions = document.createElement("div");
+    divOptions.id = "divOptions";
+
+    // Title
+    let titleOptions = document.createElement("div");
+    titleOptions.className = "title";
+    titleOptions.innerText = "Cookie Stonks";
+    divOptions.append(titleOptions);
+
+    // Big Div
+    let bigDivOptions = document.createElement("div");
+    divOptions.append(bigDivOptions);
+
+    // Gradient Title
+    let divGradient = document.createElement("div");
+    divGradient.className = "listing listingSection";
+    divGradient.innerText = "Gradient";
+    divGradient.style = "font-family: Kavoon; font-style: bold; font-size: 17px;";
+    bigDivOptions.append(divGradient);
+
+    // Gradient Listing
+    let listingGradient = document.createElement("div");
+    listingGradient.className = "listing";
+    bigDivOptions.append(listingGradient);
+
+    // Gradient Default Tick
+    let gradDefTick = document.createElement("input");
+    gradDefTick.id = "gradDefTick";
+    gradDefTick.type = "checkbox";
+    if (gradient == "default") {
+        gradDefTick.checked = true;
+    } else {
+        gradDefTick.checked = false;
+    }
+    gradDefTick.onclick = function(){
+        if (gradient == "default") {
+            gradDefTick.checked = true;
+        } else {
+            gradient = "default";
+            gradDealTick.checked = false;
+        }
+        localStorage["gradient"] = gradient;
+    };
+    listingGradient.append(gradDefTick);
+
+    // Gradient Default Label
+    let gradDefLabel = document.createElement("label");
+    gradDefLabel.htmlFor = "gradDefTick";
+    gradDefLabel.innerText = "Default — Red-Yellow: Low prices | Green-Blue: High prices";
+    gradDefLabel.style.fontFamily = "Tahoma";
+    listingGradient.append(gradDefLabel);
+
+    // Break Line
+    let br1 = document.createElement("br");
+    listingGradient.append(br1);
+
+    // Gradient Deal Tick
+    let gradDealTick = document.createElement("input");
+    gradDealTick.id = "gradDealTick";
+    gradDealTick.type = "checkbox";
+    if (gradient == "deal") {
+        gradDealTick.checked = true;
+    } else {
+        gradDealTick.checked = false;
+    }
+    gradDealTick.onclick = function(){
+        if (gradient == "default") {
+            gradient = "deal";
+            gradDefTick.checked = false;
+        } else {
+            gradDealTick.checked = true;
+        }
+        localStorage["gradient"] = gradient;
+    };
+    listingGradient.append(gradDealTick);
+
+    // Gradient Deal Label
+    let gradDealLabel = document.createElement("label");
+    gradDealLabel.htmlFor = "gradDealTick";
+    gradDealLabel.innerText = "Deal — Purple: Buy | Green: Sell | Grey: Do nothing";
+    gradDealLabel.style.fontFamily = "Tahoma";
+    listingGradient.append(gradDealLabel);
+
+    // Shimmer Title
+    let divShimmer = document.createElement("div");
+    divShimmer.className = "listing listingSection";
+    divShimmer.innerText = "Shimmer ";
+    divShimmer.style = "font-family: Kavoon; font-style: bold; font-size: 17px;";
+    bigDivOptions.append(divShimmer);
+
+    // Shimmer Turn ON/OFF Button
+    let shimmerButton = document.createElement("a");
+    shimmerButton.id = "shimmerButton";
+
+    if (shimmerState == "on") {
+        shimmerButton.className = "option";
+        shimmerButton.innerText = "ON";
+    } else {
+        shimmerButton.className = "option off";
+        shimmerButton.innerText = "OFF";
+    }
+
+    shimmerButton.onclick = function(){
+        if (shimmerState == "on") {
+            shimmerState = "off";
+            shimmerButton.className = "option off";
+            shimmerButton.innerText = "OFF";
+            // Remove all canvases/shimmers
+            for (let id = 0; id <= 15; id++) {
+            let prevCanvas = document.getElementById("shimmerCanvas" + id);
+                if (prevCanvas) {
+                    prevCanvas.remove();
+                }
+            }
+        } else {
+            shimmerState = "on";
+            shimmerButton.className = "option";
+            shimmerButton.innerText = "ON";
+
+        }
+        localStorage["shimmerState"] = shimmerState;
+    };
+    divShimmer.append(shimmerButton);
+
+    // Shimmer Listing
+    let listingShimmer = document.createElement("div");
+    listingShimmer.className = "listing";
+    bigDivOptions.append(listingShimmer);
+
+    // Shimmer Default Tick
+    let shimmerDefTick = document.createElement("input");
+    shimmerDefTick.id = "shimmerDefTick";
+    shimmerDefTick.type = "checkbox";
+    if (shimmerMode == "default") {
+        shimmerDefTick.checked = true;
+    } else {
+        shimmerDefTick.checked = false;
+    }
+    shimmerDefTick.onclick = function(){
+        if (shimmerMode == "default") {
+            shimmerDefTick.checked = true;
+        } else {
+            shimmerMode = "default";
+            shimmerDealTick.checked = false;
+        }
+        localStorage["shimmerMode"] = shimmerMode;
+    };
+    listingShimmer.append(shimmerDefTick);
+
+    // Shimmer Default Label
+    let shimmerDefLabel = document.createElement("label");
+    shimmerDefLabel.htmlFor = "shimmerDefTick";
+    shimmerDefLabel.innerText = "Default — For every stock";
+    shimmerDefLabel.style.fontFamily = "Tahoma";
+    listingShimmer.append(shimmerDefLabel);
+
+    // Break Line
+    let br2 = document.createElement("br");
+    listingShimmer.append(br2);
+
+    // Shimmer Deal Tick
+    let shimmerDealTick = document.createElement("input");
+    shimmerDealTick.id = "shimmerDealTick";
+    shimmerDealTick.type = "checkbox";
+    if (shimmerMode == "deal") {
+        shimmerDealTick.checked = true;
+    } else {
+        shimmerDealTick.checked = false;
+    }
+    shimmerDealTick.onclick = function(){
+        if (shimmerMode == "default") {
+            shimmerMode = "deal";
+            shimmerDefTick.checked = false;
+        } else {
+            shimmerDealTick.checked = true;
+        }
+        localStorage["shimmerMode"] = shimmerMode;
+    };
+    listingShimmer.append(shimmerDealTick);
+
+    // Shimmer Deal Label
+    let shimmerDealLabel = document.createElement("label");
+    shimmerDealLabel.htmlFor = "shimmerDealTick";
+    shimmerDealLabel.innerText = "Deal — Only for pertinent stocks";
+    shimmerDealLabel.style.fontFamily = "Tahoma";
+    listingShimmer.append(shimmerDealLabel);
+
+    // Break Line
+    let br3 = document.createElement("br");
+    listingShimmer.append(br3);
+
+    // Break Line
+    let br4 = document.createElement("br");
+    listingShimmer.append(br4);
+
+    // Sliderbox Golden Shimmer
+    let sliderGolden = document.createElement("div");
+    sliderGolden.className = "sliderBox";
+    listingShimmer.append(sliderGolden);
+
+    // Text Sliderbox Golden
+    let divSliderGolden = document.createElement("div");
+    divSliderGolden.style = "float: left";
+    divSliderGolden.innerText = "Golden Shimmer";
+    sliderGolden.append(divSliderGolden);
+
+    // Percentage Sliderbox Golden
+    let perSliderGolden = document.createElement("div");
+    perSliderGolden.style = "float: right";
+    perSliderGolden.innerText = ">=" + goldenShimmer + "%";
+    sliderGolden.append(perSliderGolden);
+
+    // Slider Golden
+    let actualSliderGolden = document.createElement("input");
+    actualSliderGolden.className = "slider";
+    actualSliderGolden.style = "clear: both";
+    actualSliderGolden.type = "range";
+    actualSliderGolden.min = "100";
+    actualSliderGolden.max = "200";
+    actualSliderGolden.value = goldenShimmer;
+    actualSliderGolden.step = "1";
+    actualSliderGolden.oninput = function() {
+        goldenShimmer = this.value;
+        perSliderGolden.innerText = ">=" + goldenShimmer + "%";
+        localStorage["goldenShimmer"] = goldenShimmer;
+        // Remove all canvases/shimmers
+        for (let id = 0; id <= 15; id++) {
+            let prevCanvas = document.getElementById("shimmerCanvas" + id);
+            if (prevCanvas) {
+                prevCanvas.remove();
+            }
+        }
+    }
+    sliderGolden.append(actualSliderGolden);
+
+    // Break Line
+    let br5 = document.createElement("br");
+    listingShimmer.append(br5);
+
+    // Break Line
+    let br6 = document.createElement("br");
+    listingShimmer.append(br6);
+
+    // Sliderbox Wrath Shimmer
+    let sliderWrath = document.createElement("div");
+    sliderWrath.className = "sliderBox";
+    listingShimmer.append(sliderWrath);
+
+    // Text Sliderbox Wrath
+    let divSliderWrath = document.createElement("div");
+    divSliderWrath.style = "float: left";
+    divSliderWrath.innerText = "Wrath Shimmer";
+    sliderWrath.append(divSliderWrath);
+
+    // Percentage Sliderbox Wrath
+    let perSliderWrath = document.createElement("div");
+    perSliderWrath.style = "float: right";
+    perSliderWrath.innerText = "<=" + wrathShimmer + "%";
+    sliderWrath.append(perSliderWrath);
+
+    // Slider Wrath
+    let actualSliderWrath = document.createElement("input");
+    actualSliderWrath.className = "slider";
+    actualSliderWrath.style = "clear: both";
+    actualSliderWrath.type = "range";
+    actualSliderWrath.min = "1";
+    actualSliderWrath.max = "99";
+    actualSliderWrath.value = wrathShimmer;
+    actualSliderWrath.step = "1";
+    actualSliderWrath.oninput = function() {
+        wrathShimmer = this.value;
+        perSliderWrath.innerText = "<=" + wrathShimmer + "%";
+        localStorage["wrathShimmer"] = wrathShimmer;
+        // Remove all canvases/shimmers
+        for (let id = 0; id <= 15; id++) {
+            let prevCanvas = document.getElementById("shimmerCanvas" + id);
+            if (prevCanvas) {
+                prevCanvas.remove();
+            }
+        }
+    }
+    sliderWrath.append(actualSliderWrath);
+
+    return divOptions;
+}
+
+function checkForInsugarTrading(tries, maxTries) {
+    if (document.getElementById("bankGood-1") && document.getElementById("bankGood-1").firstChild && document.getElementById("bankGood-1").firstChild.childNodes[4] && document.getElementById("bankGood-1").firstChild.childNodes[4].innerText && document.getElementById("bankGood-1").firstChild.childNodes[4].innerText.slice(0,9) == "Quantile:") {
+        insugarTradingFound = true;
+        document.getElementById("bankGood-1-val").id = "bankGood-1-val"; // Force update of shimmers
+    } else if (tries < maxTries) {
+        setTimeout(function() {
+            checkForInsugarTrading(tries + 1, maxTries);
+        }, 100);
+    }
+    return;
+}
+
 var callbackMenu = function(mutationsList) {
     observerMenu.disconnect(); // So the change we make isn't detected as a mutation and we enter an infinite loop
 
-    let menu = document.getElementById("bankBrokers").parentElement;
+    //console.log(window.scrollTop);
+    let mainMenu = document.getElementById("menu");
+    let sectionMenu = document.getElementsByClassName("section")[0];
+    let menu = document.getElementsByClassName("subsection")[0];
+    if (mainMenu && menu && sectionMenu && sectionMenu.innerText == "Options") {
+        menu.insertBefore(createOptionsElements(), menu.lastChild);
+        document.getElementById("centerArea").scrollTop = scroll;
+    }
 
-    // Gradient Button
-    let buttonGradient = document.createElement("a");
-    buttonGradient.className = "option";
-    buttonGradient.innerText = "Switch Gradient";
-    buttonGradient.id = "buttonDealGradient";
-    buttonGradient.onclick = function(){
-        if (gradient == "default") {
-            gradient = "deal";
-        } else {
-            gradient = "default";
-        }
-        localStorage["gradient"] = gradient;
-
-        for (let i = 0; i <= 15; i++) {
-            document.getElementById("bankGood-" + i + "-val").innerHTML = document.getElementById("bankGood-" + i + "-val").innerHTML.replace(/<br>/g, '');
-            document.getElementById("restingElement-" + i).remove();
-        }
-    };
-
-    //menu.append(document.createElement('br'), menu.childNodes[0]);
-    menu.append(buttonGradient, menu.childNodes[0]);
-
-    observerMenu.observe(menu, config);
+    observerMenu.observe(mainMenu, config);
 };
 
 // Options for the observer (which mutations to observe)
@@ -155,7 +519,19 @@ var observer = [];
 
 // Create an observer instance linked to the callback function
 let observerMenu = new MutationObserver(callbackMenu);
+
+// Variables
 let gradient = localStorage["gradient"] || "default";
+let shimmerMode = localStorage["shimmerMode"] || "deal";
+let shimmerState = localStorage["shimmerState"] || "on";
+let goldenShimmer = localStorage["goldenShimmer"] || 150;
+let wrathShimmer = localStorage["wrathShimmer"] || 50;
+let shimmerGolden = document.createElement("img");
+shimmerGolden.src = "img/shadedBordersGold.png";
+let shimmerWrath = document.createElement("img");
+shimmerWrath.src = "img/shadedBordersRed.png";
+let scroll = 0;
+let insugarTradingFound = false;
 
 (async function() {
     'use strict';
@@ -168,38 +544,45 @@ let gradient = localStorage["gradient"] || "default";
     window.addEventListener('load', async function() {
         'use strict';
 
-        await sleep(2000);
+        //await sleep(2000);
 
         // Add options menu
-        let menu = document.getElementById("bankBrokers").parentElement;
+        // Control proper scrolling in options menu
+        document.getElementById("centerArea").addEventListener("scroll", (event) => {
+            let tempScroll = document.getElementById("centerArea").scrollTop;
+            if (tempScroll != 0 && document.getElementById("divOptions")) {
+                scroll = tempScroll;
+            } if (!document.getElementById("divOptions")) {
+                scroll = 0;
+            }
+        });
+        let mainMenu = document.getElementById("menu");
+        let sectionMenu = document.getElementsByClassName("section")[0];
+        let menu = document.getElementsByClassName("subsection")[0];
+        if (mainMenu && menu && sectionMenu && sectionMenu.innerText == "Options") {
+            menu.insertBefore(createOptionsElements(), menu.lastChild);
+            document.getElementById("centerArea").scrollTop = scroll;
+        }
+        observerMenu.observe(mainMenu, config);
 
-        // Gradient Button
-        let buttonGradient = document.createElement("a");
-        buttonGradient.className = "option";
-        buttonGradient.innerText = "Switch Gradient";
-        buttonGradient.id = "buttonDealGradient";
-        buttonGradient.onclick = function(){
-            if (gradient == "default") {
-                gradient = "deal";
+        // Add percentages
+        // Wait for elements to load
+        let maxTries = 1000;
+        let tries = 0;
+        while(!document.getElementById("productLevel5") || !document.querySelector("#bankGood-1-val")) {
+            if (tries <= maxTries) {
+                await new Promise(r => setTimeout(r, 100));
+                tries++;
             } else {
-                gradient = "default";
+                console.error("Cookie Stonks couldn't load properly!");
+                return;
             }
-            localStorage["gradient"] = gradient;
+        }
 
-            for (let i = 0; i <= 15; i++) {
-                document.getElementById("bankGood-" + i + "-val").innerHTML = document.getElementById("bankGood-" + i + "-val").innerHTML.replace(/<br>/g, '');
-                document.getElementById("restingElement-" + i).remove();
-            }
-        };
-
-        //menu.append(document.createElement('br'), menu.childNodes[0]);
-        menu.append(buttonGradient, menu.childNodes[0]);
-
-        // Start observing the target node for configured mutations
-        observerMenu.observe(menu, config);
-
+        // Add actual elements
         let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
         for (let i = 0; i <= 15; i++) {
+
             let elemToEdit = document.getElementById("bankGood-" + i + "-val");
             let elemStockAmount = document.getElementById("bankGood-" + i + "-stock").innerText.replace(',', '');
             let elemStockMax = document.getElementById("bankGood-" + i + "-stockMax").innerText.replace('/', '').replace(',', '');
@@ -211,6 +594,9 @@ let gradient = localStorage["gradient"] || "default";
             // Start observing the target node for configured mutations
             observer[i].observe(elemToEdit, config);
         }
+        console.log("Cookie Stonks loaded.");
 
+        // Check for Insugar Trading to change the Shimmer size
+        checkForInsugarTrading(1, 300);
     });
 })();
