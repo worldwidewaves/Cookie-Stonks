@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -47,6 +47,10 @@ function getRestingValue(id, bankLevel) {
     return (10 * (id + 1) + bankLevel - 1);
 }
 
+function getOverhead(brokers) {
+    return (0.01 * 20 * Math.pow(0.95, brokers))
+}
+
 function getRestingDifference(id, value, bankLevel) {
     let restingValue = getRestingValue(id, bankLevel);
     let difference = (parseFloat(value.replace('$', '')) / restingValue * 100).toFixed(0);
@@ -54,15 +58,15 @@ function getRestingDifference(id, value, bankLevel) {
     return difference;
 }
 
-function getColorMode(value, owned, ownedMax, mode) {
+function getColorMode(value, owned, ownedMax, mode, difference, overhead) {
     if (value > 100) { value = 100; }
 
     switch (gradient) {
         case "deal":
             value = parseInt(value * 1.28 + 50);
-            if (parseInt(owned) > 0 && (mode == "positive1" || mode == "positive2")) {
+            if (parseInt(owned) > 0 && (mode == "positive1" || mode == "positive2") && difference > Math.sqrt(1 + overhead) * 100) {
                 return [128 - value, 128, 128 - value];
-            } else if (parseInt(owned) < parseInt(ownedMax) && (mode == "negative1" || mode == "negative2")) {
+            } else if (parseInt(owned) < parseInt(ownedMax) && (mode == "negative1" || mode == "negative2") && difference < 1 / Math.sqrt(1 + overhead) * 100) {
                 return [128, 128 - value, 128];
             } else {
                 return [128, 128, 128];
@@ -85,7 +89,7 @@ function getColorMode(value, owned, ownedMax, mode) {
     }
 }
 
-function addRestingElement(ele, owned, ownedMax, id, bankLevel) {
+function addRestingElement(ele, owned, ownedMax, id, bankLevel, brokers) {
     // Remove previous restingElement and resting elementDiff
     let prevRestingElement = document.getElementById("restingElement-" + id);
     if (prevRestingElement) {
@@ -123,18 +127,19 @@ function addRestingElement(ele, owned, ownedMax, id, bankLevel) {
     restingElementDiff.className = "restingElement";
     restingElementDiff.id = "restingElementDiff-" + id;
 
+    let overhead = getOverhead(brokers);
     let bgR, bgG, bgB;
     if (difference >= 150) {
-        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive2");
+        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive2", difference, overhead);
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else if (difference >= 100) {
-        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive1");
+        [bgR, bgG, bgB] = getColorMode(difference - 100, owned, ownedMax, "positive1", difference, overhead);
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else if (difference >= 95) {
-        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative2");
+        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative2", difference, overhead);
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     } else {
-        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative1");
+        [bgR, bgG, bgB] = getColorMode(100 - difference, owned, ownedMax, "negative1", difference, overhead);
         restingElementDiff.style = "font-weight:bold;color:#FFF;background-color:rgb(" + bgR + "," + bgG + "," + bgB + ")";
     }
 
@@ -184,13 +189,19 @@ function addRestingElement(ele, owned, ownedMax, id, bankLevel) {
 // Callback function to execute when mutations are observed
 var callback = async function(mutationsList) {
     let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
+    let brokers;
+    if (document.getElementById("bankBrokersText").innerText == "no brokers") {
+        brokers = 0;
+    } else {
+        brokers = parseInt(document.getElementById("bankBrokersText").innerText.replace("brokers ", ""));
+    }
     for (let i = 0; i <= 15; i++) {
         observer[i].disconnect(); // So the change we make isn't detected as a mutation and we enter an infinite loop
 
         let elemToEdit = document.getElementById("bankGood-" + i + "-val");
         let elemStockAmount = document.getElementById("bankGood-" + i + "-stock").innerText.replace(',', '');
         let elemStockMax = document.getElementById("bankGood-" + i + "-stockMax").innerText.replace('/', '').replace(',', '');
-        addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel);
+        addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel, brokers);
 
         observer[i].observe(elemToEdit, config);
     }
@@ -499,7 +510,6 @@ function checkForInsugarTrading(tries, maxTries) {
 var callbackMenu = function(mutationsList) {
     observerMenu.disconnect(); // So the change we make isn't detected as a mutation and we enter an infinite loop
 
-    //console.log(window.scrollTop);
     let mainMenu = document.getElementById("menu");
     let sectionMenu = document.getElementsByClassName("section")[0];
     let menu = document.getElementsByClassName("subsection")[0];
@@ -519,6 +529,9 @@ var observer = [];
 
 // Create an observer instance linked to the callback function
 let observerMenu = new MutationObserver(callbackMenu);
+
+// Broker observer
+var observerBrokers = new MutationObserver(callback);
 
 // Variables
 let gradient = localStorage["gradient"] || "default";
@@ -569,7 +582,7 @@ let insugarTradingFound = false;
         // Wait for elements to load
         let maxTries = 1000;
         let tries = 0;
-        while(!document.getElementById("productLevel5") || !document.querySelector("#bankGood-1-val")) {
+        while(!document.getElementById("productLevel5") || !document.querySelector("#bankGood-1-val") || !document.getElementById("bankBrokersText")) {
             if (tries <= maxTries) {
                 await new Promise(r => setTimeout(r, 100));
                 tries++;
@@ -581,12 +594,19 @@ let insugarTradingFound = false;
 
         // Add actual elements
         let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
+        let brokers;
+        if (document.getElementById("bankBrokersText").innerText == "no brokers") {
+             brokers = 0;
+        } else {
+            brokers = parseInt(document.getElementById("bankBrokersText").innerText.replace("brokers ", ""));
+        }
+
         for (let i = 0; i <= 15; i++) {
 
             let elemToEdit = document.getElementById("bankGood-" + i + "-val");
             let elemStockAmount = document.getElementById("bankGood-" + i + "-stock").innerText.replace(',', '');
             let elemStockMax = document.getElementById("bankGood-" + i + "-stockMax").innerText.replace('/', '').replace(',', '');
-            addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel);
+            addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel, brokers);
 
             // Create an observer instance linked to the callback function
             observer[i] = new MutationObserver(callback);
@@ -594,6 +614,7 @@ let insugarTradingFound = false;
             // Start observing the target node for configured mutations
             observer[i].observe(elemToEdit, config);
         }
+        observerBrokers.observe(document.getElementById("bankBrokersText"), { attributes: true, childList: true, characterData: true });
         console.log("Cookie Stonks loaded.");
 
         // Check for Insugar Trading to change the Shimmer size
