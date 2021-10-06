@@ -24,5 +24,5 @@ Quick script that displays the [Resting Value](https://cookieclicker.fandom.com/
 
 2. Open either the **local** or **workshop** folder, doesn't matter which. Inside, create a new folder, and name it **CookieStonks** or something similar.
 
-3. Download the two files from the [SteamVersion folder](https://github.com/Benna96/Cookie-Stonks/tree/feature/SteamVersion/SteamVersion) on this page and put them inside the **CookieStonks** folder you created.  
+3. Download the two files from the [SteamVersion folder](https://github.com/suicidejerk/Cookie-Stonks/tree/main/SteamVersion) on this page and put them inside the **CookieStonks** folder you created.  
 Alternatively, create an **info.txt** and **main.js** file in the **CookieStonks** folder, then copy the contents of the [info.txt](SteamVersion/info.txt) and [main.js](SteamVersion/main.js) files into them, respectively. Note that you need to have file name extensions turned on if you wish to do it this way.
