@@ -1,0 +1,12 @@
+{
+	"Name": "Cookie Stonks",
+	"ID": "cookiestonks",
+	"Author": "Sui",
+	"Description": "Cookie Clicker Stock Market Helper",
+	"ModVersion": 1.5,
+	"GameVersion": 2.042,
+	"Date": "6/10/2021",
+	"Dependencies": [],
+	"Disabled": 1,
+	"AllowSteamAchievs": 1
+}
