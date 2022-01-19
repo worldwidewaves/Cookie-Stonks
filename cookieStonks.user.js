@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
+// @match        http://orteil.dashnet.org/cookieclicker/
 // @homepageURL  https://github.com/suicidejerk/Cookie-Stonks
 // @supportURL   https://github.com/suicidejerk/Cookie-Stonks/issues
 // @updateURL    https://raw.githubusercontent.com/suicidejerk/Cookie-Stonks/master/cookieStonks.user.js
