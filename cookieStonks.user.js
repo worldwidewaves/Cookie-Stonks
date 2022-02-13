@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -547,6 +547,75 @@ shimmerWrath.src = "img/shadedBordersRed.png";
 let scroll = 0;
 let insugarTradingFound = false;
 
+// Run
+async function run() {
+    'use strict';
+
+    //await sleep(2000);
+
+    // Add options menu
+    // Control proper scrolling in options menu
+    document.getElementById("centerArea").addEventListener("scroll", (event) => {
+        let tempScroll = document.getElementById("centerArea").scrollTop;
+        if (tempScroll != 0 && document.getElementById("divOptions")) {
+            scroll = tempScroll;
+        } if (!document.getElementById("divOptions")) {
+            scroll = 0;
+        }
+    });
+    let mainMenu = document.getElementById("menu");
+    let sectionMenu = document.getElementsByClassName("section")[0];
+    let menu = document.getElementsByClassName("subsection")[0];
+    if (mainMenu && menu && sectionMenu && sectionMenu.innerText == "Options") {
+        menu.insertBefore(createOptionsElements(), menu.lastChild);
+        document.getElementById("centerArea").scrollTop = scroll;
+    }
+    observerMenu.observe(mainMenu, config);
+
+    // Add percentages
+    // Wait for elements to load
+    let maxTries = 1000;
+    let tries = 0;
+    while(!document.getElementById("productLevel5") || !document.querySelector("#bankGood-1-val") || !document.getElementById("bankBrokersText")) {
+        if (tries <= maxTries) {
+            await new Promise(r => setTimeout(r, 100));
+            tries++;
+        } else {
+            console.error("Cookie Stonks couldn't load properly!");
+            return;
+        }
+    }
+
+    // Add actual elements
+    let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
+    let brokers;
+    if (document.getElementById("bankBrokersText").innerText == "no brokers") {
+        brokers = 0;
+    } else {
+        brokers = parseInt(document.getElementById("bankBrokersText").innerText.replace("brokers ", ""));
+    }
+
+    for (let i = 0; i <= 15; i++) {
+
+        let elemToEdit = document.getElementById("bankGood-" + i + "-val");
+        let elemStockAmount = document.getElementById("bankGood-" + i + "-stock").innerText.replace(',', '');
+        let elemStockMax = document.getElementById("bankGood-" + i + "-stockMax").innerText.replace('/', '').replace(',', '');
+        addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel, brokers);
+
+        // Create an observer instance linked to the callback function
+        observer[i] = new MutationObserver(callback);
+
+        // Start observing the target node for configured mutations
+        observer[i].observe(elemToEdit, config);
+    }
+    observerBrokers.observe(document.getElementById("bankBrokersText"), { attributes: true, childList: true, characterData: true });
+    console.log("Cookie Stonks loaded.");
+
+    // Check for Insugar Trading to change the Shimmer size
+    checkForInsugarTrading(1, 300);
+};
+
+// Start
 (async function() {
     'use strict';
 
@@ -555,70 +624,9 @@ let insugarTradingFound = false;
     s.innerHTML = styleSheet;
     (document.head || document.documentElement).appendChild(s);
 
-    window.addEventListener('load', async function() {
-        'use strict';
-
-        //await sleep(2000);
-
-        // Add options menu
-        // Control proper scrolling in options menu
-        document.getElementById("centerArea").addEventListener("scroll", (event) => {
-            let tempScroll = document.getElementById("centerArea").scrollTop;
-            if (tempScroll != 0 && document.getElementById("divOptions")) {
-                scroll = tempScroll;
-            } if (!document.getElementById("divOptions")) {
-                scroll = 0;
-            }
-        });
-        let mainMenu = document.getElementById("menu");
-        let sectionMenu = document.getElementsByClassName("section")[0];
-        let menu = document.getElementsByClassName("subsection")[0];
-        if (mainMenu && menu && sectionMenu && sectionMenu.innerText == "Options") {
-            menu.insertBefore(createOptionsElements(), menu.lastChild);
-            document.getElementById("centerArea").scrollTop = scroll;
-        }
-        observerMenu.observe(mainMenu, config);
-
-        // Add percentages
-        // Wait for elements to load
-        let maxTries = 1000;
-        let tries = 0;
-        while(!document.getElementById("productLevel5") || !document.querySelector("#bankGood-1-val") || !document.getElementById("bankBrokersText")) {
-            if (tries <= maxTries) {
-                await new Promise(r => setTimeout(r, 100));
-                tries++;
-            } else {
-                console.error("Cookie Stonks couldn't load properly!");
-                return;
-            }
-        }
-
-        // Add actual elements
-        let bankLevel = parseInt(document.getElementById("productLevel5").innerText.replace("lvl ", ""));
-        let brokers;
-        if (document.getElementById("bankBrokersText").innerText == "no brokers") {
-             brokers = 0;
-        } else {
-            brokers = parseInt(document.getElementById("bankBrokersText").innerText.replace("brokers ", ""));
-        }
-
-        for (let i = 0; i <= 15; i++) {
-
-            let elemToEdit = document.getElementById("bankGood-" + i + "-val");
-            let elemStockAmount = document.getElementById("bankGood-" + i + "-stock").innerText.replace(',', '');
-            let elemStockMax = document.getElementById("bankGood-" + i + "-stockMax").innerText.replace('/', '').replace(',', '');
-            addRestingElement(elemToEdit, elemStockAmount, elemStockMax, i, bankLevel, brokers);
-
-            // Create an observer instance linked to the callback function
-            observer[i] = new MutationObserver(callback);
-
-            // Start observing the target node for configured mutations
-            observer[i].observe(elemToEdit, config);
-        }
-        observerBrokers.observe(document.getElementById("bankBrokersText"), { attributes: true, childList: true, characterData: true });
-        console.log("Cookie Stonks loaded.");
-
-        // Check for Insugar Trading to change the Shimmer size
-        checkForInsugarTrading(1, 300);
-    });
+    if (document.readyState === 'complete') {
+        run();
+    } else {
+        window.addEventListener("load", run);
+    }
 })();
