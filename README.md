@@ -30,6 +30,12 @@ javascript:(function(){var script=document.createElement('script');script.setAtt
 
 ## Steam
 
+### Workshop  _(Recommended)_
+
+1. Go to the [Workshop Page](https://steamcommunity.com/sharedfiles/filedetails/?id=2767659541) and click subscribe.
+
+### Manual
+
 1. Open the mods folder. You can locate the folder ingame by clicking on **Options** → **Manage mods** → **Open /mods folder**.
 
 2. Open either the **local** or **workshop** folder, doesn't matter which. Inside, create a new folder, and name it **CookieStonks** or something similar.
