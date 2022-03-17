@@ -36,6 +36,6 @@ javascript:(function(){var script=document.createElement('script');script.setAtt
 
 ### Manual
 
-1. Go to [Releases](releases) and download the last one. Extract the .zip, you should be left with a folder named **Cookie Stonks** with **main.js**, **info.txt** & **thumbnail.png**.
+1. Go to [Releases](../../releases) and download the last one. Extract the .zip, you should be left with a folder named **Cookie Stonks** with **main.js**, **info.txt** & **thumbnail.png** inside.
 
 2. Open the Cookie Clicker mods folder. You can locate the folder ingame by clicking on **Options** → **Manage mods** → **Open /mods folder**. Place the **Cookie Stonks** folder inside the **local** folder.
