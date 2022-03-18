@@ -8,7 +8,7 @@
 // @match        http://orteil.dashnet.org/cookieclicker/
 // @homepageURL  https://github.com/worldwidewaves/Cookie-Stonks
 // @supportURL   https://github.com/worldwidewaves/Cookie-Stonks/issues
-// @updateURL    https://raw.githubusercontent.com/worldwidewaves/Cookie-Stonks/master/cookieStonks.user.js
+// @updateURL    https://raw.githubusercontent.com/worldwidewaves/Cookie-Stonks/main/main.user.js
 // @icon         https://raw.githubusercontent.com/worldwidewaves/Cookie-Stonks/main/thumbnail.png
 // @license      MIT
 // @grant        none
