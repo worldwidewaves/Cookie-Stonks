@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    cookiestonks
-// @version      1.7.0
+// @version      1.7.1
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -208,6 +208,9 @@
                 }
             }
 
+            // Number of different stocks
+            let numStocks = Game.ObjectsN - 2
+
             // Callback function to execute when mutations are observed
             async function callback(mutationsList) {
                 let bankLevel = parseInt(document.getElementById('productLevel5').innerText.replace('lvl ', ''))
@@ -217,7 +220,7 @@
                 } else {
                     brokers = parseInt(document.getElementById('bankBrokersText').innerText.replace('brokers ', ''))
                 }
-                for (let i = 0; i <= 15; i++) {
+                for (let i = 0; i < numStocks; i++) {
                     observer[i].disconnect() // So the change we make isn't detected as a mutation and we enter an infinite loop
 
                     let elemToEdit = document.getElementById('bankGood-' + i + '-val')
@@ -339,7 +342,7 @@
                         shimmerButton.className = 'option off'
                         shimmerButton.innerText = 'OFF'
                         // Remove all canvases/shimmers
-                        for (let id = 0; id <= 15; id++) {
+                        for (let id = 0; id < numStocks; id++) {
                             let prevCanvas = document.getElementById('shimmerCanvas' + id)
                             if (prevCanvas) {
                                 prevCanvas.remove()
@@ -457,7 +460,7 @@
                     perSliderGolden.innerText = '>=' + goldenShimmer + '%'
                     localStorage['goldenShimmer'] = goldenShimmer
                     // Remove all canvases/shimmers
-                    for (let id = 0; id <= 15; id++) {
+                    for (let id = 0; id < numStocks; id++) {
                         let prevCanvas = document.getElementById('shimmerCanvas' + id)
                         if (prevCanvas) {
                             prevCanvas.remove()
@@ -505,7 +508,7 @@
                     perSliderWrath.innerText = '<=' + wrathShimmer + '%'
                     localStorage['wrathShimmer'] = wrathShimmer
                     // Remove all canvases/shimmers
-                    for (let id = 0; id <= 15; id++) {
+                    for (let id = 0; id < numStocks; id++) {
                         let prevCanvas = document.getElementById('shimmerCanvas' + id)
                         if (prevCanvas) {
                             prevCanvas.remove()
@@ -612,7 +615,7 @@
                     brokers = parseInt(document.getElementById('bankBrokersText').innerText.replace('brokers ', ''))
                 }
 
-                for (let i = 0; i <= 15; i++) {
+                for (let i = 0; i < numStocks; i++) {
                     let elemToEdit = document.getElementById('bankGood-' + i + '-val')
                     let elemStockAmount = document.getElementById('bankGood-' + i + '-stock').innerText.replace(',', '')
                     let elemStockMax = document.getElementById('bankGood-' + i + '-stockMax').innerText.replace('/', '').replace(',', '')
