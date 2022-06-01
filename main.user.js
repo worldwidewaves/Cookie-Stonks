@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Cookie Stonks
 // @namespace    cookiestonks
-// @version      1.7.1
+// @version      1.7.2
 // @description  Cookie Clicker Stock Market Helper
 // @author       Sui
 // @match        https://orteil.dashnet.org/cookieclicker/
@@ -36,27 +36,18 @@
         init: function() {
             // Style
             let styleSheet = `
-            .restingElement {
+            .restingElementCS {
                 background-color: grey;
                 padding: 5px;
                 font-size: 12px;
             }
-            .shimmer {
-                position: relative;
-                width: 128px;
-                height: 128px;
-                top: 0;
-                left: 0;
-            }
-            .canvases {
-                 width: 180px;
-                 height: 83px;
+            .canvasesCS {
                  position: absolute;
-                 padding-left: -10;
-                 padding-right: -10;
-                 margin-left: -1px;
-                 margin-top: -82px;
-                 display: block;
+                 top: -1px;
+                 left: -1px;
+                 width: calc(100% + 2px);
+                 height: calc(100% + 2px);
+                 z-index: 100;
                  pointer-events: none;
             }
             `
@@ -146,7 +137,7 @@
                 let restingElementDiff = document.createElement('span')
                 let difference = getRestingDifference(id, ele.innerText, bankLevel)
                 restingElementDiff.innerText = difference + '%'
-                restingElementDiff.className = 'restingElement'
+                restingElementDiff.className = 'restingElementCS'
                 restingElementDiff.id = 'restingElementDiff-' + id
 
                 let overhead = getOverhead(brokers)
@@ -187,23 +178,18 @@
                         prevCanvas.remove()
                     }
 
+                    // Add new shimmer
                     let canvas = document.createElement('canvas')
-                    canvas.style.zIndex = 100
-                    canvas.className = 'canvases'
-                    if (insugarTradingFound) {
-                        canvas.style.height = '98px'
-                        canvas.style.marginTop = '-97px'
-                    }
+                    canvas.className = 'canvasesCS'
                     canvas.id = 'shimmerCanvas' + id
                     let ctx = canvas.getContext('2d')
                     let imageAppend = document.getElementById('bankGood-' + id)
-                    let shimmer = document.createElement('img')
 
                     imageAppend.append(canvas)
                     if (difference >= topDiff && key1) {
-                        ctx.drawImage(shimmerGolden, 0, 0, 264, 150)
+                        canvas.style.boxShadow = 'inset 0 0 16px #ffc35f'
                     } else if (difference <= bottomDiff && key2) {
-                        ctx.drawImage(shimmerWrath, 0, 0, 264, 150)
+                        canvas.style.boxShadow = 'inset 0 0 16px #c62813'
                     }
                 }
             }
@@ -214,12 +200,7 @@
             // Callback function to execute when mutations are observed
             async function callback(mutationsList) {
                 let bankLevel = parseInt(document.getElementById('productLevel5').innerText.replace('lvl ', ''))
-                let brokers
-                if (document.getElementById('bankBrokersText').innerText == 'no brokers') {
-                    brokers = 0
-                } else {
-                    brokers = parseInt(document.getElementById('bankBrokersText').innerText.replace('brokers ', ''))
-                }
+                let brokers = Game.Objects['Bank'].minigame.brokers;
                 for (let i = 0; i < numStocks; i++) {
                     observer[i].disconnect() // So the change we make isn't detected as a mutation and we enter an infinite loop
 
@@ -520,26 +501,14 @@
                 return divOptions
             }
 
-            function checkForInsugarTrading(tries, maxTries) {
-                if (document.getElementById('bankGood-1') && document.getElementById('bankGood-1').firstChild && document.getElementById('bankGood-1').firstChild.childNodes[4] && document.getElementById('bankGood-1').firstChild.childNodes[4].innerText && document.getElementById('bankGood-1').firstChild.childNodes[4].innerText.slice(0,9) == 'Quantile:') {
-                    insugarTradingFound = true
-                    document.getElementById('bankGood-1-val').id = 'bankGood-1-val' // Force update of shimmers
-                } else if (tries < maxTries) {
-                    setTimeout(function() {
-                        checkForInsugarTrading(tries + 1, maxTries)
-                    }, 100)
-                }
-                return
-            }
-
             function callbackMenu(mutationsList) {
                 observerMenu.disconnect() // So the change we make isn't detected as a mutation and we enter an infinite loop
 
                 let mainMenu = document.getElementById('menu')
-                let sectionMenu = document.getElementsByClassName('section')[0]
-                let menu = document.getElementsByClassName('subsection')[0]
-                if (mainMenu && menu && sectionMenu && sectionMenu.innerText == 'Options') {
-                    document.getElementsByClassName('subsection')[document.getElementsByClassName('subsection').length - 1].innerText == 'Mods\nManage mods Check mod data Publish mods' ? document.getElementsByClassName('subsection')[document.getElementsByClassName('subsection').length - 1].insertBefore(createOptionsElements(), document.getElementsByClassName('subsection')[document.getElementsByClassName('subsection').length - 1].lastChild.nextSibling) : document.getElementsByClassName('subsection')[document.getElementsByClassName('subsection').length - 1].insertBefore(createOptionsElements(), document.getElementsByClassName('subsection')[document.getElementsByClassName('subsection').length - 1].lastChild)
+                if (mainMenu && Game.onMenu == 'prefs') {
+                    let menuElements = document.getElementsByClassName('subsection')
+                    let lastMenuElement = menuElements[menuElements.length - 1]
+                    lastMenuElement.insertBefore(createOptionsElements(), lastMenuElement.lastChild.nextSibling)
                     document.getElementById('centerArea').scrollTop = scroll
                 }
 
@@ -564,12 +533,7 @@
             let shimmerState = localStorage['shimmerState'] || 'on'
             let goldenShimmer = localStorage['goldenShimmer'] || 150
             let wrathShimmer = localStorage['wrathShimmer'] || 50
-            let shimmerGolden = document.createElement('img')
-            shimmerGolden.src = 'img/shadedBordersGold.png'
-            let shimmerWrath = document.createElement('img')
-            shimmerWrath.src = 'img/shadedBordersRed.png'
             let scroll = 0
-            let insugarTradingFound = false
 
             // Run
             async function run() {
@@ -608,12 +572,7 @@
 
                 // Add actual elements
                 let bankLevel = parseInt(document.getElementById('productLevel5').innerText.replace('lvl ', ''))
-                let brokers
-                if (document.getElementById('bankBrokersText').innerText == 'no brokers') {
-                    brokers = 0
-                } else {
-                    brokers = parseInt(document.getElementById('bankBrokersText').innerText.replace('brokers ', ''))
-                }
+                let brokers = Game.Objects['Bank'].minigame.brokers;
 
                 for (let i = 0; i < numStocks; i++) {
                     let elemToEdit = document.getElementById('bankGood-' + i + '-val')
@@ -630,9 +589,6 @@
                 observerBrokers.observe(document.getElementById('bankBrokersText'), { attributes: true, childList: true, characterData: true })
                 // Notify mod loaded
                 Game.Notify('Cookie Stonks loaded!', 'Buy low, sell high!', [31, 8], 6)
-
-                // Check for Insugar Trading to change the Shimmer size
-                checkForInsugarTrading(1, 300)
             }
             run()
         }

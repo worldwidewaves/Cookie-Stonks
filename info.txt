@@ -3,7 +3,7 @@
 	"ID": "Cookie Stonks",
 	"Author": "Sui",
 	"Description": "Cookie Clicker Stock Market Helper",
-	"ModVersion": "1.7.1",
+	"ModVersion": "1.7.2",
 	"GameVersion": 2.043,
 	"Date": "01/06/2022",
 	"Dependencies": [],
