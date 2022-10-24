@@ -24,7 +24,7 @@ Quick script that displays the [Resting Value](https://cookieclicker.fandom.com/
 
 1. Add a new bookmark with whatever name you want and paste this as the URL:
 ```
-javascript:(function(){var script=document.createElement('script');script.setAttribute('type','text/javascript');script.setAttribute('src','https://combinatronics.com/worldwidewaves/Cookie-Stonks/main/main.user.js');document.body.appendChild(script);}());
+javascript:(function(){var script=document.createElement('script');script.setAttribute('type','text/javascript');script.setAttribute('src','https://worldwidewaves.github.io/Cookie-Stonks/main.user.js');document.body.appendChild(script);}());
 ```
 2. Open Cookie Clicker and click on the bookmark.
 
